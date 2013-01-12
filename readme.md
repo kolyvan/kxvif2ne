@@ -8,7 +8,7 @@ Some features (like posting messages) are not implemented yet.
 
 at least iOS 5.1 and iPhone 3GS 
 
-### Want to beta test for VIF2NE.RU
+### Want to be a beta tester?
 
 Join at [testflightapp.com](http://tflig.ht/XsgIpa)
 
