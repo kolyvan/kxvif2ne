@@ -1,0 +1,12 @@
+[submodule "vendors/kxtools"]
+	path = vendors/kxtools
+	url = git://github.com/kolyvan/kxtools.git
+[submodule "vendors/CocoaLumberjack"]
+	path = vendors/CocoaLumberjack
+	url = git://github.com/robbiehanson/CocoaLumberjack.git
+[submodule "vendors/kxhtml"]
+	path = vendors/kxhtml
+	url = git://github.com/kolyvan/kxhtml.git
+[submodule "vendors/CKRefreshControl"]
+	path = vendors/CKRefreshControl
+	url = git://github.com/instructure/CKRefreshControl.git
