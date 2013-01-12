@@ -263,7 +263,8 @@
     const BOOL expanded = (_text != nil || _htmlRender != nil);
     if (expanded) {
         
-        if (CGRectContainsPoint(CGRectMake(self.bounds.size.width - 50, 10, 50, 20), loc)) {
+        CGRect r = CGRectMake(self.contentView.bounds.size.width - 50, 10, 50, 20);
+        if (CGRectContainsPoint(r, loc)) {
             
             NSString *s = [NSString stringWithFormat:@"http://vif2ne.ru/nvk/forum/0/co/%d.htm",
                            _node.article.number];
@@ -276,7 +277,7 @@
     
     if (_htmlRender && _htmlRender.isUserInteractive) {
     
-        if (CGRectContainsPoint([self bounds], loc)) {
+        if (CGRectContainsPoint(self.contentView.bounds, loc)) {
             
             NSURL *url = [_htmlRender hitTest:loc];
             if (url) {

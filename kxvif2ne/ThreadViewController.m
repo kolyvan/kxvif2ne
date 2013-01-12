@@ -230,7 +230,7 @@ static int ddLogLevel = LOG_LEVEL_INFO;
             
             VifNodeCell *cell =  (VifNodeCell *)[self.tableView cellForRowAtIndexPath:indexPath];
             
-            CGPoint loc = [self.tableView convertPoint:pt toView:cell];
+            CGPoint loc = [self.tableView convertPoint:pt toView:cell.contentView];
             if ([cell handleTouch:loc])
                 return;
         }
