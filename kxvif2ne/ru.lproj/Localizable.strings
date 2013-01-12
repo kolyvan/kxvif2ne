@@ -1,0 +1,29 @@
+/* 
+  Localizable.strings
+  kxvif2ne
+
+  Created by Kolyvan on 12.01.13.
+  Copyright (c) 2013 Konstantin Bukreev. All rights reserved.
+*/
+
+"loading.." = "загрузка..";
+"(loading..)" = "(загрузка..)";
+"Loading %@" = "Загрузка %@";
+"Authorization required" = "Требуется аутентификация";
+"Username" = "Имя";
+"Password" = "Пароль";
+"Login" = "Вход";
+"Login Success" = "Добро пожаловать";
+"Not Authorized" = "Нет разрешения";
+"Close" = "Закрыть";
+"Network failure" = "Ошибка сети (нет подключения к сети)";
+"HTTP failure" = "Сервер вернул код состояния отличный от 'успешно'";
+"Wrong XML response" = "Сервер вернул неправильный XML ответ";
+"Unable parse article" = "Невозможно разобрать текст сообщения";
+"Unable parse last event" = "Невозможно получить lastEvent";
+"Unknown failure" = "Неизвестная ошибка";
+"Cancel" = "Отмена";
+"Open in Safari" = "Открыть в Safari";
+"Copy link" = "Копировать ссылку";
+"Error" = "Ошибка";
+"Post message" = "Отправить";
