@@ -20,6 +20,8 @@
 #import "DDLog.h"
 #import "DDTTYLogger.h"
 
+#import "HTTPRequest.h"
+
 static int ddLogLevel = LOG_LEVEL_VERBOSE;
 
 @implementation AppDelegate {
@@ -33,8 +35,15 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    _treeViewController = [[TreeViewController alloc] init];
-    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:_treeViewController];
+    if (1) {
+        
+        _treeViewController = [[TreeViewController alloc] init];
+        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:_treeViewController];
+        
+    } else {
+        
+        [self test];
+    }
     
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
@@ -108,7 +117,7 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
 {
     [DDLog addLogger:[DDTTYLogger sharedInstance]];
     DDLogVerbose(@"setup logger");
-        
+    
     if (1) {
         
         NSString *path = KxUtils.pathForPrivateFile(@"model.dat");
@@ -125,13 +134,38 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
     [ColorTheme setup: settings.colorTheme];    
 }
 
-/*
+
 - (void) test
 {
     WebBrowserViewController *wbc = [[WebBrowserViewController alloc] init];
     wbc.url = [NSURL URLWithString:@"http://pda.lenta.ru"];
     self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:wbc];
+    
+    // http://httpbin.org/post
+    // http://posttestserver.com/post.php
+    
+    [HTTPRequest httpPost:[NSURL URLWithString: @"http://httpbin.org/post"]
+                  referer:nil
+            authorization:nil
+               parameters:@{@"key1": @"test escape ?&!", @"key2" : @"http://pda.lenta.ru?x=1&z=3", @"key3" : @"проверка"}
+                 encoding:NSUTF8StringEncoding
+                 response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res) {
+                     
+                     DDLogVerbose(@"status: %d", res.statusCode);
+                     DDLogVerbose(@"headers: %@", res.responseHeaders);
+                     
+                     return YES;
+                 }
+                 progress:nil
+                 complete:^(HTTPRequest *req, NSData *data, NSError *error) {
+                     
+                     if (error)
+                         DDLogVerbose(@"%@", error);
+                     if (data)
+                         DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                     
+                 }];
 }
-*/
+
 
 @end

@@ -89,4 +89,8 @@ typedef void(^VifModelBlock)(id result);
 
 - (BOOL) isDirty;
 
+- (void) postMessage: (NSUInteger) articleNumber
+             subject: (NSString *) subject
+                body: (NSString *) body;
+
 @end

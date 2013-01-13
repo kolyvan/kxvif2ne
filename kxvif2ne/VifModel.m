@@ -938,4 +938,62 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     [_messageCache cancelAll];
 }
 
+- (void) postMessage: (NSUInteger) articleNumber
+             subject: (NSString *) subject
+                body: (NSString *) body
+{
+    NSString *path;
+    if (articleNumber)
+        path = [NSString stringWithFormat: @"http://vif2ne.ru/nvk/forum/0/security/reply/%d", articleNumber];
+    else
+        path = @"http://vif2ne.ru/nvk/forum/0/security/new";
+    
+    NSDictionary *parameter = @{
+    @"subject": subject,
+    @"body": body
+    
+    // toplevel, hello, bye
+    };
+    
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    
+    [HTTPRequest httpPost:[NSURL URLWithString: path]
+                  referer:nil
+            authorization:[[VifSettings settings] authorization]
+               parameters:parameter
+                 encoding:NSUTF8StringEncoding // NSWindowsCP1251StringEncoding
+                 response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+     {
+         DDLogVerbose(@"status: %d", res.statusCode);
+         DDLogVerbose(@"headers: %@", res.responseHeaders);
+         
+         [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+         
+         if (res.statusCode != 200) {
+             
+             NSString *s = [NSHTTPURLResponse localizedStringForStatusCode: res.statusCode];
+             s = [NSString stringWithFormat:@"%d %@", res.statusCode, s];
+             
+             [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"HTTP failure", nil)
+                                         message:s
+                                        delegate:nil
+                               cancelButtonTitle:NSLocalizedString(@"Close", nil)
+                               otherButtonTitles:nil] show];
+             
+         }
+         
+         return NO;
+     }
+                 progress:nil
+                 complete:^(HTTPRequest *req, NSData *data, NSError *error)
+     {
+         if (error)
+             DDLogVerbose(@"%@", error);
+         if (data)
+             DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:NSWindowsCP1251StringEncoding]);
+         
+     }];
+
+}
+
 @end

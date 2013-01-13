@@ -49,6 +49,25 @@ static NSString * extractContentValueAndField(NSString * string, NSString * name
     return a[0];
 }
 
+static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding encoding)
+{
+    static NSString *escaped = @"?!@#$^&%*+=,:;'\"`<>()[]{}/\\|~ ";
+        
+    NSMutableArray *ma = [NSMutableArray array];
+    [dict enumerateKeysAndObjectsUsingBlock:^(id key, id val, BOOL *stop) {
+      
+        CFStringRef cref = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+                                                                   (CFStringRef)[val description],
+                                                                   NULL,
+                                                                   (CFStringRef)escaped,
+                                                                   encoding);
+        
+        NSString *s  = [NSString stringWithFormat:@"%@=%@", key, cref];
+        [ma addObject:s];
+    }];
+    return [ma componentsJoinedByString:@"&"];
+}
+
 ////////
 
 @interface HTTPRequestResponse()
@@ -120,6 +139,25 @@ static NSString * extractContentValueAndField(NSString * string, NSString * name
                                    complete: complete];
 }
 
++ (id) httpPost: (NSURL *) url
+        referer: (NSString *) referer
+  authorization: (NSString *) authorization
+     parameters: (NSDictionary *) parameters
+       encoding: (NSStringEncoding) encoding
+       response: (HTTPRequestResponseBlock) response
+       progress: (HTTPRequestProgressBlock) progress
+       complete: (HTTPRequestCompleteBlock) complete
+{
+    return [[HTTPRequest alloc] initHttpPost: url
+                                     referer: referer
+                               authorization: authorization
+                                  parameters:parameters
+                                    encoding: encoding
+                                    response: response
+                                    progress: progress
+                                    complete: complete];
+}
+
 - (id)  initHttpGet: (NSURL *) url
             referer: (NSString *) referer
       authorization: (NSString *) authorization
@@ -160,6 +198,69 @@ static NSString * extractContentValueAndField(NSString * string, NSString * name
         [request setHTTPShouldHandleCookies: YES];
         [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
                 
+        _conn = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+        if (!_conn) {
+            
+            DDLogWarn(@"connection '%@' can't be initialized", url);
+            self = nil;
+        }
+    }
+    return self;
+}
+
+- (id)  initHttpPost: (NSURL *) url
+             referer: (NSString *) referer
+       authorization: (NSString *) authorization
+          parameters: (NSDictionary *) parameters
+            encoding: (NSStringEncoding) encoding
+            response: (HTTPRequestResponseBlock) response
+            progress: (HTTPRequestProgressBlock) progress
+            complete: (HTTPRequestCompleteBlock) complete
+{
+    self = [super init];
+    if (self) {
+        
+        _response = response;
+        _progress = progress;
+        _complete = complete;
+        _url = url;
+        
+        NSDictionary *dict = @{
+        @"User-Agent"       : FAKE_USER_AGENT,
+        @"DNT"              : @"1",
+        @"Accept-Language"  : @"ru-RU, ru, en-US;q=0.8",
+        @"Pragma"           : @"no-cache",
+        @"Cache-Control"    : @"no-cache, max-age=0",
+        @"Proxy-Connection" : @"keep-alive",
+        };
+        
+        NSMutableDictionary *md = [dict mutableCopy];
+        
+        if (referer)
+            md[@"Referer"] = referer;
+        if (authorization)
+            md[@"Authorization"] = authorization;
+        
+        NSData *body = nil;
+        if (parameters.count) {
+            
+            CFStringEncoding cfsEncoding = CFStringConvertNSStringEncodingToEncoding(encoding);
+            NSString *charset = (NSString *)CFStringConvertEncodingToIANACharSetName(cfsEncoding);
+            DDLogVerbose(@"charset %@", charset);            
+            md[@"Content-Type"] = [NSString stringWithFormat:@"application/x-www-form-urlencoded; charset=%@", charset];
+            body = [htmlBodyFromParameters(parameters, cfsEncoding) dataUsingEncoding:encoding];
+        }
+        
+        DDLogVerbose(@"post %@ auth: %@", _url, authorization);
+        
+        NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:_url];
+        [request setHTTPMethod:@"POST"];
+        [request setAllHTTPHeaderFields:md];
+        [request setHTTPShouldHandleCookies: YES];
+        [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];        
+        if (body)
+            [request setHTTPBody:body];
+        
         _conn = [[NSURLConnection alloc] initWithRequest:request delegate:self];
         if (!_conn) {
             

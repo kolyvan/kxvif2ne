@@ -14,8 +14,6 @@
 #import "ColorTheme.h"
 #import "VifModel.h"
 #import "VifMessageCache.h"
-#import "VifSettings.h"
-#import "HTTPRequest.h"
 #import "NSString+Kolyvan.h"
 #import "helpers.h"
 
@@ -183,11 +181,29 @@
 
 - (void) didTouchSend
 {
-    NSString * message = _textView.text;
-    if (message.length) {
+    NSString *text = _textView.text;
+    if (text.length) {
         
-        // TODO: post message
-        // take the first line as title
+        NSString *subject, *body;
+        NSRange r = [text rangeOfString:@"\n"];
+        if (r.location != NSNotFound) {
+            
+            subject = [text substringToIndex:r.location].trimmed;
+            body = [text substringFromIndex:r.location + 1].trimmed;
+            
+        } else {
+            
+            subject = text.trimmed;
+            body = @"";
+        }
+        
+        if (subject.length > 80)
+            subject = [subject substringToIndex:80];
+       
+        [[VifModel model] postMessage:_article.number
+                              subject:subject
+                                 body:body];
+        
     }
     
     [self.navigationController popViewControllerAnimated:YES];

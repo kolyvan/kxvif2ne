@@ -36,6 +36,15 @@ typedef void (^HTTPRequestCompleteBlock)(HTTPRequest*, NSData*, NSError*);
       progress: (HTTPRequestProgressBlock) progress
       complete: (HTTPRequestCompleteBlock) complete;
 
++ (id) httpPost: (NSURL *) url
+        referer: (NSString *) referer
+  authorization: (NSString *) authorization
+     parameters: (NSDictionary *) parameters
+       encoding: (NSStringEncoding) encoding
+       response: (HTTPRequestResponseBlock) response
+       progress: (HTTPRequestProgressBlock) progress
+       complete: (HTTPRequestCompleteBlock) complete;
+
 - (void) close;
 
 - (BOOL) isClosed;
