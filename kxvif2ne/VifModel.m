@@ -580,9 +580,9 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     nodes = [nodes sortedArrayUsingComparator:^(VifNode *left, VifNode *right) {
         
         if (right.article.fixed > left.article.fixed)
-            return NSOrderedAscending;
-        if (right.article.fixed < left.article.fixed)
             return NSOrderedDescending;
+        if (right.article.fixed < left.article.fixed)
+            return NSOrderedAscending;
         return NSOrderedSame;
         
     }];
