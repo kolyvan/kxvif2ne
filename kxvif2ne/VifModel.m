@@ -740,9 +740,13 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     self.prevDate = self.date;
     
     id p = root[@"event"];
-    if (!p)
-        return YES;
+    if (!p) {
         
+        // no changes
+        [self resetCountersRecursively];
+        return YES;
+    }
+    
     DDLogVerbose(@"set lastEvent %d", s.integerValue);
     self.lastEvent = s.integerValue;
     
@@ -809,8 +813,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 }
 
 - (void) asyncUpdate: (VifModelBlock) block
-{
-    [self resetCountersRecursively];
+{    
     [self asyncLoadXMLTree:block resetTree:NO];
 }
 
