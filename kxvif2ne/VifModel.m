@@ -972,7 +972,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                   referer:nil
             authorization:[[VifSettings settings] authorization]
                parameters:parameter
-                 encoding:NSUTF8StringEncoding // NSWindowsCP1251StringEncoding
+                 encoding:NSWindowsCP1251StringEncoding
                  response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
      {
          DDLogVerbose(@"status: %d", res.statusCode);
