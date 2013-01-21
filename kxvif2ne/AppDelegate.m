@@ -69,7 +69,10 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
         
         ColorTheme *theme = [ColorTheme theme];
         
-        if (![theme.name isEqualToString:settings.colorTheme]) {
+        if ((theme.name != settings.colorTheme) && // is case if both are nil
+            ![theme.name isEqualToString:settings.colorTheme]) {
+            
+            DDLogInfo(@"reset colour theme, %@, %@", theme.name, settings.colorTheme);
             
             [ColorTheme setup: settings.colorTheme];
             
