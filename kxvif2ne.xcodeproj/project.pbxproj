@@ -63,6 +63,7 @@
 		87DB8C5F169EE0480020D04E /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 87DB8C5D169EE0480020D04E /* LoginViewController.m */; };
 		87FA53CB16ACEF690090DDA3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 87FA53CA16ACEF690090DDA3 /* Icon.png */; };
 		87FA53CE16ACEF700090DDA3 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 87FA53CD16ACEF700090DDA3 /* Icon@2x.png */; };
+		87FA53DD16AD00190090DDA3 /* NSData+Kolyvan.m in Sources */ = {isa = PBXBuildFile; fileRef = 87FA53DC16AD00190090DDA3 /* NSData+Kolyvan.m */; };
 		87FDE02016A14AF000B204D4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 87FDE02216A14AF000B204D4 /* Localizable.strings */; };
 		87FDE03616A157C900B204D4 /* DTHTMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 87FDE02C16A157C900B204D4 /* DTHTMLParser.m */; };
 		87FDE03716A157C900B204D4 /* hyphenation.m in Sources */ = {isa = PBXBuildFile; fileRef = 87FDE02E16A157C900B204D4 /* hyphenation.m */; };
@@ -163,6 +164,8 @@
 		87DB8C5D169EE0480020D04E /* LoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginViewController.m; sourceTree = "<group>"; };
 		87FA53CA16ACEF690090DDA3 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Icon.png; path = ../Icon.png; sourceTree = "<group>"; };
 		87FA53CD16ACEF700090DDA3 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon@2x.png"; path = "../Icon@2x.png"; sourceTree = "<group>"; };
+		87FA53DB16AD00190090DDA3 /* NSData+Kolyvan.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Kolyvan.h"; path = "vendors/kxtools/kxtools/NSData+Kolyvan.h"; sourceTree = "<group>"; };
+		87FA53DC16AD00190090DDA3 /* NSData+Kolyvan.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Kolyvan.m"; path = "vendors/kxtools/kxtools/NSData+Kolyvan.m"; sourceTree = "<group>"; };
 		87FDE02116A14AF000B204D4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		87FDE02416A14B5100B204D4 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		87FDE02516A14B5100B204D4 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -360,6 +363,8 @@
 		8732127B16A1584100906C2C /* kxtools */ = {
 			isa = PBXGroup;
 			children = (
+				87FA53DB16AD00190090DDA3 /* NSData+Kolyvan.h */,
+				87FA53DC16AD00190090DDA3 /* NSData+Kolyvan.m */,
 				8732128C16A1586F00906C2C /* KxList.h */,
 				8732128D16A1586F00906C2C /* KxList.m */,
 				8732128E16A1586F00906C2C /* KxTuple2.h */,
@@ -511,6 +516,7 @@
 				8732128B16A1585F00906C2C /* NSString+Kolyvan.m in Sources */,
 				8732129016A1586F00906C2C /* KxList.m in Sources */,
 				8732129116A1586F00906C2C /* KxTuple2.m in Sources */,
+				87FA53DD16AD00190090DDA3 /* NSData+Kolyvan.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
