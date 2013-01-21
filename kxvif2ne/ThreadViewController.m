@@ -630,18 +630,18 @@ static int ddLogLevel = LOG_LEVEL_INFO;
             _selText = @"(-)";
         }
     
-        return [VifNodeCell heightForNode:node
-                                     text:_selText
-                               htmlRender:_selHtmlRender
-                                withWidth:self.cellWidth];
+        return MIN(2009, [VifNodeCell heightForNode:node
+                                               text:_selText
+                                         htmlRender:_selHtmlRender
+                                          withWidth:self.cellWidth]);
     }    
     
     const NSUInteger indentationLevel = (_plainMode || !indexPath.section) ? 0 : [self indentationLevelForNode: node];
     
-    return [VifNodeCell heightForNode:node
-                                 text:nil
-                           htmlRender:nil
-                            withWidth:self.cellWidth - indentationLevel * _indentationWidth];
+    return MIN(2009,[VifNodeCell heightForNode:node
+                                          text:nil
+                                    htmlRender:nil
+                                     withWidth:self.cellWidth - indentationLevel * _indentationWidth]);
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
