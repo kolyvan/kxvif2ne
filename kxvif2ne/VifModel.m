@@ -427,6 +427,13 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     _numReplies =  _numRecent = _hasUnread = -1;
 }
 
+- (void) resetCountersRecursively
+{
+    [self resetCounters];
+    for (VifNode *node in _nodes)
+        [node.tree resetCountersRecursively];
+}
+
 - (NSArray *) sortedNodes
 {
     return [_nodes sortedArrayUsingComparator:^(VifNode *left, VifNode *right) {
@@ -803,6 +810,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 
 - (void) asyncUpdate: (VifModelBlock) block
 {
+    [self resetCountersRecursively];
     [self asyncLoadXMLTree:block resetTree:NO];
 }
 
