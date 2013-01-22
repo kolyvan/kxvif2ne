@@ -115,7 +115,10 @@
         if (_article) {
         
             NSMutableString *ms = [NSMutableString string];
-            [ms appendFormat:@"Re: %@\n\n", _article.title];
+            if ([_article.title hasPrefix:@"Re:"])
+                [ms appendFormat:@"%@\n\n", _article.title];
+            else
+                [ms appendFormat:@"Re: %@\n\n", _article.title];
                         
             id p = [[[VifModel model] messageCache] lookupMessage:_article.number];
             if ([p isKindOfClass:[NSData class]]) {
@@ -190,13 +193,14 @@
             
             subject = [text substringToIndex:r.location].trimmed;
             body = [text substringFromIndex:r.location + 1].trimmed;
+            body = [body stringByReplacingOccurrencesOfString:@"\n" withString:@"\r\n"];
             
         } else {
             
             subject = text.trimmed;
             body = @"";
         }
-        
+                
         if (subject.length > 80)
             subject = [subject substringToIndex:80];
        
