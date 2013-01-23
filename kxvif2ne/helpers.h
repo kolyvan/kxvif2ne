@@ -14,7 +14,7 @@
 
 extern NSString *fixAmpersandsInString(NSString *string);
 extern NSString *fixBrokenURLInHTML(NSString *html);
-extern NSData *fixBrokenTitleInXML(NSData *xml);
+extern NSData *fixBrokenTitleInXML(NSData *xml) __attribute__((deprecated));
 extern void drainCacheIfExcess(NSMutableDictionary *cache, NSUInteger maxSize);
 extern NSString *stripHTMLComment(NSString *html);
 extern NSString *stripHTMLTags(NSString *html);

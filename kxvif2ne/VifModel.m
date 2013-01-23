@@ -722,7 +722,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                     error: (NSError **) perror
 
 {    
-    NSDictionary *dict = [XmlReader read:fixBrokenTitleInXML(data) error:perror];
+    NSDictionary *dict = [XmlReader read:data error:perror];
     if (!dict) {
 
         DDLogWarn(@"unable parse response '%@'", *perror);
