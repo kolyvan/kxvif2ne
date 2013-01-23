@@ -141,7 +141,7 @@ static int ddLogLevel = LOG_LEVEL_INFO;
     VifNode *node = nil;
     
     if (self.rootNode.article.number == number ||
-        nil != (node = [self.rootNode.tree findNode:number])) {
+        nil != (node = [self.rootNode.tree findNode:number recursive:YES])) {
         
         if (node) {
             

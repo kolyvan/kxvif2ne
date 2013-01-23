@@ -115,7 +115,7 @@ typedef struct
             return YES;
         }
         
-        if ([node.tree findNode:number]) {
+        if ([node.tree findNode:number recursive:YES]) {
             
             [self showThread:node];
 

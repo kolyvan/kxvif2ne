@@ -277,15 +277,19 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 }
 
 - (VifNode *) findNode: (NSUInteger) number
+             recursive: (BOOL) recursive
 {
     for (VifNode *node in _nodes) {
         
         if (node.article.number == number)
             return node;
+        
+        if (recursive) {
             
-        VifNode* p = [node.tree findNode:number];
-        if (p)
-            return p;
+            VifNode* p = [node.tree findNode:number recursive:YES];
+            if (p)
+                return p;
+        }
     }
     
     return nil;
@@ -305,8 +309,18 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
         
         if (node.article.number == article.parent) {
             
-            result = [[VifNode alloc] init:node article:article];
-            [node.tree addNode:result];
+            // no duplicates allowed
+            result = [node.tree findNode:article.number recursive:NO];
+            if (!result) {
+                
+                result = [[VifNode alloc] init:node article:article];
+                [node.tree addNode:result];
+                
+            } else {
+                
+                DDLogInfo(@"duplicate found %@", article);
+            }
+            
             break;
         }
         
@@ -634,7 +648,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 - (void) changeArticle: (NSUInteger) number
                 parent: (NSUInteger) parentNumber
 {   
-    VifNode *node = [self findNode:number];
+    VifNode *node = [self findNode:number recursive:YES];
     if (node) {
         
         DDLogVerbose(@"change parent %@ -> %d", node.article, parentNumber);
@@ -650,7 +664,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 - (void) fixArticle: (NSUInteger) number
                mode: (BOOL) mode
 {   
-    VifNode *node = [self findNode:number];
+    VifNode *node = [self findNode:number recursive:YES];
     if (node) {
         DDLogVerbose(@"fix %@", node.article);
         node.article.fixed = mode;

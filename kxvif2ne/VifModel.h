@@ -57,7 +57,8 @@ extern NSError *vifModelError(VifModelError error, NSString *format, ...);
 @property (readonly, nonatomic, strong) NSArray *nodes;
 @property (readonly, nonatomic, strong) NSDate *date;
 
-- (VifNode *) findNode: (NSUInteger) number;
+- (VifNode *) findNode: (NSUInteger) number
+             recursive: (BOOL) recursive;
 
 - (NSUInteger) numReplies;
 - (NSUInteger) numRecent;
