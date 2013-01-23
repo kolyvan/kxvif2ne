@@ -108,19 +108,9 @@ static int ddLogLevel = LOG_LEVEL_INFO;
     
     if (_needReload) {
         
-        _needReload = NO;
-        
+        _needReload = NO;        
         _plainMode = [[VifSettings settings] plainMode];
-        
-        [_thread removeAllObjects];
-        [_thread addObject:_rootNode];
-        
-        _replies = _plainMode ? _rootNode.tree.sortedNodes : _rootNode.tree.deepSortedNodes;
-        
-        _selIndexPath = nil;
-        _selText = nil;
-        _selHtmlRender = nil;
-        
+        [self resetData];
         [self.tableView reloadData];
     }
 }
@@ -189,6 +179,18 @@ static int ddLogLevel = LOG_LEVEL_INFO;
 }
 
 #pragma mark - private
+
+- (void) resetData
+{
+    [_thread removeAllObjects];
+    [_thread addObject:_rootNode];
+    
+    _replies = _plainMode ? _rootNode.tree.sortedNodes : _rootNode.tree.deepSortedNodes;
+    
+    _selIndexPath = nil;
+    _selText = nil;
+    _selHtmlRender = nil;
+}
 
 - (void) navigationBack
 {
@@ -563,6 +565,38 @@ static int ddLogLevel = LOG_LEVEL_INFO;
     }
     return level;
 }
+
+- (void)doRefresh:(CKRefreshControl *)sender
+{
+    [VifModel.model asyncUpdateNode:_rootNode
+                              block: ^(id result) {
+        
+        [self.refreshControl endRefreshing];
+        
+        if ([result isKindOfClass:[NSError class]]) {
+            
+            NSError *error = result;
+            
+            NSString *title = error.localizedDescription;
+            NSString *message = error.userInfo[NSLocalizedFailureReasonErrorKey];
+            
+            [[[UIAlertView alloc] initWithTitle:title
+                                        message:message ? message : @""
+                                       delegate:nil
+                              cancelButtonTitle:NSLocalizedString(@"Close", nil)
+                              otherButtonTitles:nil] show];
+            
+        } else {
+            
+            if ([result boolValue]) {
+                
+                [self resetData];
+                [self.tableView reloadData];
+            }
+        }
+    }];
+}
+
 
 #pragma mark - Table view data source
 

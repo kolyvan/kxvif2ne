@@ -15,9 +15,11 @@
 
 @class PostViewController;
 @class VifArticle;
+@class CKRefreshControl;
 
 @interface BaseVifViewController : KxTableViewController<UIPopoverControllerDelegate>
 
+@property (nonatomic,retain) UIRefreshControl *refreshControl;
 @property (readonly, nonatomic, strong) UIPopoverController *loginPopoverController;
 @property (readonly, nonatomic, strong) PostViewController  *postViewController;
 @property (readonly, nonatomic) CGFloat cellWidth;
@@ -25,5 +27,6 @@
 - (BOOL) openArticle: (NSUInteger) number;
 - (void) didTouchPostMessage;
 - (void) postMessage: (VifArticle *) article;
+- (void) doRefresh: (CKRefreshControl *)sender;
 
 @end

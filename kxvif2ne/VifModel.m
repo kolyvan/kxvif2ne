@@ -22,7 +22,7 @@
 #import "DDLog.h"
 #import "helpers.h"
 
-static int ddLogLevel = LOG_LEVEL_INFO;
+static int ddLogLevel = LOG_LEVEL_VERBOSE;
 
 
 NSString * vifModelErrorDomain = @"ru.kolyvan.vifmodel";
@@ -318,7 +318,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                 
             } else {
                 
-                DDLogInfo(@"duplicate found %@", article);
+                DDLogWarn(@"duplicate article found %@", article);
             }
             
             break;
@@ -384,7 +384,9 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     for (VifNode *node in _nodes) {
          
         printf("%*s %s / %d %d\n",
-               indent, "", node.article.description.UTF8String, node.tree->_numReplies, node.tree->_numRecent);
+               indent, "", node.article.description.UTF8String,
+               node.tree->_numReplies,
+               node.tree->_numRecent); //[node.article.date iso8601Formatted].UTF8String
         
         [node.tree dump:indent+1];
     }
@@ -495,6 +497,41 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     }
 }
 
+- (BOOL) updateTreeFromEvents: (NSArray *) events
+{   
+    NSUInteger nadd = 0;
+    
+    for (NSDictionary *dict in events) {
+        
+        NSString *type = dict[@"type"];
+        if ([type isEqualToString:@"add"]) {
+            
+            VifArticle *article = [[VifArticle alloc] initFromDictionary:dict];
+            if (![self findNode:article.number recursive:YES]) {
+                
+                if ([self addArticle:article]) {
+                    
+                    ++nadd;
+                    DDLogVerbose(@"add article %@", article);
+                    
+                } else {
+                    
+                    DDLogInfo(@"possible bug, unable add article %@", article);
+                }
+            }
+        } 
+    }
+    
+    if (!nadd)
+        return NO;
+    
+    DDLogInfo(@"updateTreeFromEvents: %d", nadd);
+    
+    [self updateTreeRecursively];
+    //[self dump:0];
+    return YES;
+}
+
 @end
 
 /////////////////////////////////////////////////////////////////////////////
@@ -580,6 +617,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
             [self addArticle:article index:index];
             //[self addArticle:article];
         [self updateTreeRecursively];
+        self.prevDate = self.date;
         
         DDLogVerbose(@"VifModel.load: create tree in %.2fs", -[ts timeIntervalSinceNow]);
         DDLogInfo(@"model loaded, %d %d", self.lastEvent, articles.count);
@@ -732,59 +770,75 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 }
 
 - (BOOL) parseXMLResponse: (NSData *) data
-                resetTree: (BOOL) resetTree
+                   events: (NSArray **) pEvents
+                lastEvent: (NSUInteger *) pLastEvent
                     error: (NSError **) perror
-
-{    
+{
     NSDictionary *dict = [XmlReader read:data error:perror];
     if (!dict) {
-
+        
         DDLogWarn(@"unable parse response '%@'", *perror);
         return NO;
     }
-        
+    
     NSDictionary *root =  dict[@"root"];
-    NSString *s = root[@"lastEvent"];
-    if (!s) {
+    if (!root) {
+        
         if (perror)
-            *perror = vifModelError(VifModelErrorWrongXMLResponse, nil);
+            *perror = vifModelError(VifModelErrorWrongXMLResponse, @"no root element");
         return NO;
     }
     
-    self.prevDate = self.date;
+    if (pEvents) {
     
-    id p = root[@"event"];
-    if (!p) {
-        
-        // no changes
-        [self resetCountersRecursively];
-        return YES;
+        id p = root[@"event"];
+        if (p) {
+            
+            *pEvents = [p isKindOfClass:[NSArray class]] ? p : @[ p ];
+            
+        } else {
+            
+            *pEvents = nil;
+        }
     }
     
-    DDLogVerbose(@"set lastEvent %d", s.integerValue);
-    self.lastEvent = s.integerValue;
+    if (pLastEvent) {
+        
+        NSString *s = root[@"lastEvent"];
+        *pLastEvent = s ? s.integerValue : NSNotFound;
+    }
+        
+    return YES;
+}
+
+- (void) updateLastEvent: (NSUInteger) lastEvent
+               resetTree: (BOOL) resetTree
+{
+    DDLogVerbose(@"set lastEvent %d", lastEvent);
     
+    self.prevDate = self.date;
+    self.lastEvent = lastEvent;
     if (resetTree) {
         
         [self reset];
         [_messageCache reset];
     }
-    
+}
+
+- (BOOL) updateTreeFromEvents: (NSArray *) events
+{
     NSDate *ts = [NSDate date];
-    
-    NSArray *events = [p isKindOfClass:[NSArray class]] ? p : @[ p ];
     
     NSUInteger nadd = 0, ndel = 0, nfix = 0, nparent = 0;
     
     NSMutableDictionary *index = [NSMutableDictionary dictionary];
-
+    
     for (NSDictionary *dict in events) {
-
+        
         NSString *type = dict[@"type"];
         if ([type isEqualToString:@"add"]) {
             
             VifArticle *article = [[VifArticle alloc] initFromDictionary:dict];
-            //[self addArticle:article];
             [self addArticle:article index:index];
             ++nadd;
             
@@ -810,19 +864,17 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                 
                 id p = dict[@"mode"];
                 const BOOL mode = [p isEqualToString:@"1"];
-                [self fixArticle:number mode:mode];                
+                [self fixArticle:number mode:mode];
                 ++nfix;
             }
         }
-    }    
+    }
     
-    _version++;
-        
     [self updateTreeRecursively];
     
-    DDLogVerbose(@"VifModel.parseXMLResponse: update tree in %.2fs", -[ts timeIntervalSinceNow]);
-    DDLogInfo(@"result add:%d\ndel: %d\nparent:%d\nfix: %d", nadd, ndel, nparent, nfix);
-    
+    DDLogVerbose(@"updateTreeFromEvents in %.2fs", -[ts timeIntervalSinceNow]);
+    DDLogInfo(@"updateTreeFromEvents: add:%d del:%d parent:%d fix:%d", nadd, ndel, nparent, nfix);
+        
     return YES;
 }
 
@@ -884,23 +936,110 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                                 block(error);
                             
                         } else {
-                            
-                            const NSUInteger v = _version;
-                            
+                                                        
                             NSError *error;
+                            NSArray *events;
+                            NSUInteger lastEvent;
+                            
                             if ([self parseXMLResponse:data
-                                             resetTree:resetTree
+                                                events:&events
+                                             lastEvent:&lastEvent
                                                  error:&error]) {
                                 
-                                if (block)
-                                    block(@(v != _version));
+                                if (lastEvent == NSNotFound) {
+                                    
+                                    if (block)
+                                        block(vifModelError(VifModelErrorWrongXMLResponse, @"no lastEvent element"));
+                                    
+                                } else if (!events.count) {
+                                    
+                                    [self resetCountersRecursively];
+                                    if (block) block(@(NO)); // no changes
+                                    
+                                } else {
+                                    
+                                    [self updateLastEvent:lastEvent resetTree:resetTree];
+                                    [self updateTreeFromEvents:events];
+                                    _version++;
+                                    if (block) block(@(YES));
+                                }
                                 
                             } else {
-                            
+                                
                                 if (block)
                                     block(error);
                             }
                         }                        
+                    }];
+}
+
+- (void) asyncUpdateNode: (VifNode *) node
+                   block: (VifModelBlock) block
+{
+    DDLogVerbose(@"asyncUpdateNode '%d'", node.article.number);
+    
+    NSString *s = [NSString stringWithFormat: @"http://vif2ne.ru/nvk/forum/0/co/%d.htm?xml=replies",
+                   node.article.number];
+    
+    [_httpRequest close];
+    
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    
+    _httpRequest = [HTTPRequest httpGet:[NSURL URLWithString:s]
+                                referer:@"http://www.vif2ne.ru/nvk/forum/0/co/tree"
+                          authorization:[[VifSettings settings] authorization]
+                               response:^BOOL(HTTPRequest *req)
+                    {
+                        HTTPRequestResponse *res = req.response;
+                        
+                        if (res.statusCode == 200)
+                            return YES;
+                        
+                        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                        
+                        if (block) {
+                            
+                            NSString *s = [NSHTTPURLResponse localizedStringForStatusCode: res.statusCode];
+                            block(vifModelError(VifModelErrorHTTPFailure, @"%d %@", res.statusCode, s));
+                        }
+                        
+                        return NO;
+                    }
+                               progress:nil
+                               complete:^(HTTPRequest *req, NSData *data, NSError *error)
+                    {
+                        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                        
+                        if (error) {
+                            
+                            DDLogWarn(@"HTTP failure '%@'", error);
+                            if (block)
+                                block(error);
+                            
+                        } else {
+                            
+                            NSError *error;
+                            NSArray *events;
+                            
+                            if ([self parseXMLResponse:data
+                                                events:&events
+                                             lastEvent:nil
+                                                 error:&error]) {
+                                
+                                BOOL result = NO;
+                                if (events.count)
+                                    result = [node.tree updateTreeFromEvents:events];
+                                if (result)
+                                    ++_version;
+                                if (block)
+                                    block(@(result));
+                                
+                            } else {
+                                
+                                if (block)
+                                    block(error);
+                            }
+                        }
                     }];
 }
 

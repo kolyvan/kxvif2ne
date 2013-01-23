@@ -14,7 +14,6 @@
 #import "ArticleCell.h"
 #import "VifModel.h"
 #import "ThreadViewController.h"
-#import "CKRefreshControl.h"
 #import "DDLog.h"
 
 static int ddLogLevel = LOG_LEVEL_INFO;
@@ -28,7 +27,6 @@ typedef struct
 } NodeInfo;
 
 @interface TreeViewController ()
-@property (nonatomic,retain) UIRefreshControl *refreshControl;
 @end
 
 @implementation TreeViewController{
@@ -50,11 +48,6 @@ typedef struct
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
-    CKRefreshControl *refreshControl = [CKRefreshControl new];
-    [refreshControl addTarget:self action:@selector(doRefresh:) forControlEvents:UIControlEventValueChanged];
-    self.refreshControl = (id)refreshControl;
-    [self.tableView addSubview:refreshControl];
     
     [self updateNodes];
 }

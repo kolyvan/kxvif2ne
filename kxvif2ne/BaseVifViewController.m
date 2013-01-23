@@ -15,6 +15,7 @@
 #import "VifSettings.h"
 #import "LoginViewController.h"
 #import "PostViewController.h"
+#import "CKRefreshControl.h"
 
 @interface BaseVifViewController ()
 @end
@@ -39,6 +40,11 @@
                                                                        target:self
                                                                        action:@selector(didTouchPostMessage)];
     self.navigationItem.rightBarButtonItem = b;
+        
+    CKRefreshControl *refreshControl = [CKRefreshControl new];
+    [refreshControl addTarget:self action:@selector(doRefresh:) forControlEvents:UIControlEventValueChanged];
+    self.refreshControl = (id)refreshControl;
+    [self.tableView addSubview:refreshControl];
 }
 
 - (void)didReceiveMemoryWarning
@@ -112,6 +118,10 @@
             }            
         }
     }
+}
+
+- (void)doRefresh:(CKRefreshControl *)sender
+{
 }
 
 #pragma mark - PopOver controler delegate

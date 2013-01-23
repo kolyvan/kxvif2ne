@@ -82,6 +82,8 @@ typedef void(^VifModelBlock)(id result);
 + (VifModel *) model;
 
 - (void) asyncUpdate: (VifModelBlock) block;
+- (void) asyncUpdateNode: (VifNode *) node
+                   block: (VifModelBlock) block;
 
 - (void) cancelAll;
 
