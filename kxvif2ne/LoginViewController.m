@@ -149,8 +149,10 @@
             [HTTPRequest httpGet:[NSURL URLWithString:@"http://www.vif2ne.ru/nvk/forum/0/security/"]
                          referer:nil
                    authorization:[[VifSettings settings] authorization]
-                        response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+                        response:^BOOL(HTTPRequest *req)
              {
+                 HTTPRequestResponse *res = req.response;
+                 
                  [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
                  
                  NSString *message;

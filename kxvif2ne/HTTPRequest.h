@@ -18,16 +18,19 @@
 @property (readonly, nonatomic) NSUInteger statusCode;
 @property (readonly, nonatomic) NSUInteger contentLength;
 @property (readonly, nonatomic, strong) NSDictionary *responseHeaders;
-//@property (readonly, nonatomic, strong) NSString *mimeType;
+@property (readonly, nonatomic, strong) NSString *mimeType;
+@property (readonly, nonatomic, strong) NSString *charset;
+@property (readonly, nonatomic) NSStringEncoding stringEncoding;
 @end
 
-typedef BOOL (^HTTPRequestResponseBlock)(HTTPRequest*, HTTPRequestResponse*);
+typedef BOOL (^HTTPRequestResponseBlock)(HTTPRequest*);
 typedef BOOL (^HTTPRequestProgressBlock)(HTTPRequest*, NSUInteger bytesReceived);
 typedef void (^HTTPRequestCompleteBlock)(HTTPRequest*, NSData*, NSError*);
 
 @interface HTTPRequest: NSObject<NSURLConnectionDelegate>
 
 @property (readonly, nonatomic, strong) NSURL *url;
+@property (readonly, nonatomic, strong) HTTPRequestResponse *response;
 
 + (id) httpGet: (NSURL *) url
        referer: (NSString *) referer

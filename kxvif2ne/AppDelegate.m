@@ -152,10 +152,10 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
             authorization:nil
                parameters:@{@"key1": @"test escape ?&!", @"key2" : @"http://pda.lenta.ru?x=1&z=3", @"key3" : @"проверка"}
                  encoding:NSUTF8StringEncoding
-                 response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res) {
+                 response:^BOOL(HTTPRequest *req) {
                      
-                     DDLogVerbose(@"status: %d", res.statusCode);
-                     DDLogVerbose(@"headers: %@", res.responseHeaders);
+                     DDLogVerbose(@"status: %d", req.response.statusCode);
+                     DDLogVerbose(@"headers: %@", req.response.responseHeaders);
                      
                      return YES;
                  }
@@ -165,8 +165,7 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
                      if (error)
                          DDLogVerbose(@"%@", error);
                      if (data)
-                         DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-                     
+                         DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:req.response.stringEncoding]);                     
                  }];
 }
 

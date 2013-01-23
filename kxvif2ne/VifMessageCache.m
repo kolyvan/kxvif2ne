@@ -23,7 +23,7 @@
 
 static int ddLogLevel = LOG_LEVEL_INFO;
 
-#define FETCH_FORMAT @"http://vif2ne.ru/nvk/forum/0/co/%d.htm"
+#define FETCH_FORMAT @"http://vif2ne.ru/nvk/forum/0/co/%d.htm?plain"
 #define FETCH_REFERER @"http://vif2ne.ru/nvk/forum/0/co/tree"
 
 #define STORE_FOLDER @"articles"
@@ -194,8 +194,10 @@ static int ddLogLevel = LOG_LEVEL_INFO;
     r = [HTTPRequest httpGet:url
                      referer:FETCH_REFERER
                authorization:[[VifSettings settings] authorization]
-                    response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+                    response:^BOOL(HTTPRequest *req)
          {
+             HTTPRequestResponse *res = req.response;
+             
              if (res.statusCode == 200)
                  return YES;
              
@@ -219,7 +221,13 @@ static int ddLogLevel = LOG_LEVEL_INFO;
                  
              } else {
                  
-                 NSString *message = [VifMessageCache parseArticleData: data];
+                 NSString *message;
+                 
+                 if ([req.response.mimeType isEqualToString:@"text/html"])
+                     message = [VifMessageCache parseArticleData: data encoding:req.response.stringEncoding];
+                 else
+                     message = [[NSString alloc] initWithData:data encoding:req.response.stringEncoding];
+                 
                  if (message.length) {
                      
                      message = stripHTMLComment(message);
@@ -235,7 +243,6 @@ static int ddLogLevel = LOG_LEVEL_INFO;
                      [self completeFetch:articleNumber message:nil error:error block:block];
                  }
              }
-             
          }];
     
     if (r) {
@@ -405,8 +412,9 @@ static int ddLogLevel = LOG_LEVEL_INFO;
 }
 
 + (NSString *) parseArticleData: (NSData *) data
+                       encoding: (NSStringEncoding) encoding
 {
-    NSString *s = [[NSString alloc] initWithData:data encoding:NSWindowsCP1251StringEncoding];
+    NSString *s = [[NSString alloc] initWithData:data encoding:encoding];
     
     NSScanner *scanner = [NSScanner scannerWithString:s];
     

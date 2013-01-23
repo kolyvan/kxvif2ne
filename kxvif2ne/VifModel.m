@@ -832,8 +832,10 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     _httpRequest = [HTTPRequest httpGet:url
                                 referer:@"http://www.vif2ne.ru/nvk/forum/0/co/tree"
                           authorization:[[VifSettings settings] authorization]
-                               response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+                               response:^BOOL(HTTPRequest *req)
                     {
+                        HTTPRequestResponse *res = req.response;
+                        
                         if (res.statusCode == 200)
                             return YES;
                         
@@ -901,8 +903,10 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     _httpRequest = [HTTPRequest httpGet:url
                                 referer:@"http://www.vif2ne.ru/nvk/forum/0/"
                           authorization:[[VifSettings settings] authorization]
-                               response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+                               response:^BOOL(HTTPRequest *req)
                     {
+                        HTTPRequestResponse *res = req.response;
+                        
                         if (res.statusCode == 200)
                             return YES;
                                                 
@@ -974,10 +978,12 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
             authorization:[[VifSettings settings] authorization]
                parameters:parameter
                  encoding:NSWindowsCP1251StringEncoding
-                 response:^BOOL(HTTPRequest *req, HTTPRequestResponse *res)
+                 response:^BOOL(HTTPRequest *req)
      {
-         DDLogVerbose(@"status: %d", res.statusCode);
-         DDLogVerbose(@"headers: %@", res.responseHeaders);
+         HTTPRequestResponse *res = req.response;
+         
+         //DDLogVerbose(@"status: %d", res.statusCode);
+         //DDLogVerbose(@"headers: %@", res.responseHeaders);
          
          [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
          
@@ -1002,7 +1008,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
          if (error)
              DDLogVerbose(@"%@", error);
          if (data)
-             DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:NSWindowsCP1251StringEncoding]);
+             DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:req.response.stringEncoding]);
          
      }];
 

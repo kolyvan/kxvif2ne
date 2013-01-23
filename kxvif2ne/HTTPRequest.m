@@ -13,12 +13,12 @@
 #import "HTTPRequest.h"
 #import "DDLog.h"
 
-static int ddLogLevel = LOG_LEVEL_INFO;
+static int ddLogLevel = LOG_LEVEL_VERBOSE;
 
 #define FAKE_USER_AGENT @"Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B206"
 
 
-static NSString * extractContentValueAndField(NSString * string, NSString * nameField, NSString **fieldValue)
+static NSString * extractContentValueAndField(NSString *string, NSString *nameField, NSString **fieldValue)
 {
     NSArray *a = [string componentsSeparatedByString:@";"];
     if (!a.count)
@@ -84,29 +84,32 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
     self = [super init];
     if (self) {
         
-        DDLogVerbose(@"response %d", response.statusCode);
-        //NSDictionary * d = response.allHeaderFields;
-        //[d enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-        //    DDLogVerbose(@"  %@: %@", key, obj);
-        //}];
-        
         _statusCode = response.statusCode;
         _responseHeaders = response.allHeaderFields;
+        _stringEncoding = NSWindowsCP1251StringEncoding;
         
-        /*
         NSString *contentType = [_responseHeaders valueForKey:@"Content-Type"];
         if (contentType) {
+            NSString *charset;
+            _mimeType = extractContentValueAndField(contentType, @"charset", &charset);
+            _charset = charset;
             
-            NSString *s = nil;
-            _mimeType = extractContentValueAndField(contentType, @"name", _fileName ? nil : &s);
-            if (!_fileName)
-                _fileName = s;
+            if (_charset.length) {
+                
+                CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)_charset);
+                if (encoding != kCFStringEncodingInvalidId)
+                    _stringEncoding = CFStringConvertEncodingToNSStringEncoding(encoding);                
+            }
         }
-        */ 
 
         _contentLength = [response expectedContentLength];
+        
+        DDLogVerbose(@"response %d %d %@ %@ %d",
+                     response.statusCode, _contentLength, _mimeType, _charset, _stringEncoding);
+        //[response.allHeaderFields enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        //    DDLogVerbose(@"  %@: %@", key, obj);
+        //}];
     }
-    
     return self;
 }
 
@@ -117,9 +120,9 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
 @implementation HTTPRequest {
 
     NSURLConnection             *_conn;
-    HTTPRequestResponseBlock    _response;
-    HTTPRequestProgressBlock    _progress;
-    HTTPRequestCompleteBlock    _complete;
+    HTTPRequestResponseBlock    _responseBlock;
+    HTTPRequestProgressBlock    _progressBlock;
+    HTTPRequestCompleteBlock    _completeBlock;
     NSMutableData               *_data;
     NSUInteger                  _bytesReceived;
 }
@@ -127,16 +130,16 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
 + (id) httpGet: (NSURL *) url
        referer: (NSString *) referer
  authorization: (NSString *) authorization
-      response: (HTTPRequestResponseBlock) response
-      progress: (HTTPRequestProgressBlock) progress
-      complete: (HTTPRequestCompleteBlock) complete
+      response: (HTTPRequestResponseBlock) responseBlock
+      progress: (HTTPRequestProgressBlock) progressBlock
+      complete: (HTTPRequestCompleteBlock) completeBlock
 {
     return [[HTTPRequest alloc] initHttpGet: url
                                     referer: referer
                               authorization: authorization            
-                                   response: response
-                                   progress: progress
-                                   complete: complete];
+                                   response: responseBlock
+                                   progress: progressBlock
+                                   complete: completeBlock];
 }
 
 + (id) httpPost: (NSURL *) url
@@ -144,33 +147,33 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
   authorization: (NSString *) authorization
      parameters: (NSDictionary *) parameters
        encoding: (NSStringEncoding) encoding
-       response: (HTTPRequestResponseBlock) response
-       progress: (HTTPRequestProgressBlock) progress
-       complete: (HTTPRequestCompleteBlock) complete
+       response: (HTTPRequestResponseBlock) responseBlock
+       progress: (HTTPRequestProgressBlock) progressBlock
+       complete: (HTTPRequestCompleteBlock) completeBlock
 {
     return [[HTTPRequest alloc] initHttpPost: url
                                      referer: referer
                                authorization: authorization
                                   parameters:parameters
                                     encoding: encoding
-                                    response: response
-                                    progress: progress
-                                    complete: complete];
+                                    response: responseBlock
+                                    progress: progressBlock
+                                    complete: completeBlock];
 }
 
 - (id)  initHttpGet: (NSURL *) url
             referer: (NSString *) referer
       authorization: (NSString *) authorization
-           response: (HTTPRequestResponseBlock) response
-           progress: (HTTPRequestProgressBlock) progress
-           complete: (HTTPRequestCompleteBlock) complete
+           response: (HTTPRequestResponseBlock) responseBlock
+           progress: (HTTPRequestProgressBlock) progressBlock
+           complete: (HTTPRequestCompleteBlock) completeBlock
 {
     self = [super init];
     if (self) {
         
-        _response = response;
-        _progress = progress;
-        _complete = complete;
+        _responseBlock = responseBlock;
+        _progressBlock = progressBlock;
+        _completeBlock = completeBlock;
         _url = url;
         
         NSDictionary *dict = @{
@@ -213,16 +216,16 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
        authorization: (NSString *) authorization
           parameters: (NSDictionary *) parameters
             encoding: (NSStringEncoding) encoding
-            response: (HTTPRequestResponseBlock) response
-            progress: (HTTPRequestProgressBlock) progress
-            complete: (HTTPRequestCompleteBlock) complete
+            response: (HTTPRequestResponseBlock) responseBlock
+            progress: (HTTPRequestProgressBlock) progressBlock
+            complete: (HTTPRequestCompleteBlock) completeBlock
 {
     self = [super init];
     if (self) {
         
-        _response = response;
-        _progress = progress;
-        _complete = complete;
+        _responseBlock = responseBlock;
+        _progressBlock = progressBlock;
+        _completeBlock = completeBlock;
         _url = url;
         
         NSDictionary *dict = @{
@@ -294,8 +297,8 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
 
 - (void) closeWithSuccess
 {    
-    if (_complete)
-        _complete(self, _data, nil);
+    if (_completeBlock)
+        _completeBlock(self, _data, nil);
     
     [self close];
 }
@@ -304,8 +307,8 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
 {
     DDLogWarn(@"connection '%@' failed: %@", _url, error);
     
-    if (_complete)
-        _complete(self, nil, error);
+    if (_completeBlock)
+        _completeBlock(self, nil, error);
     
     [self close];
 }
@@ -315,19 +318,14 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     _data = [NSMutableData data];
-        
-    if (_response) {
     
-        HTTPRequestResponse *r = nil;
+    if ([response isKindOfClass:[NSHTTPURLResponse class]])
+        _response = [[HTTPRequestResponse alloc] initWithResponse:(NSHTTPURLResponse *)response];
+    
+    if (_responseBlock && !_responseBlock(self)) {
         
-        if ([response isKindOfClass:[NSHTTPURLResponse class]])
-            r = [[HTTPRequestResponse alloc] initWithResponse:(NSHTTPURLResponse *)response];
-        
-        if (!_response(self, r)) {
-            
-            [self close];
-        }
-    }
+        [self close];
+    }    
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -335,8 +333,8 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
     [_data appendData:data];
     _bytesReceived += data.length;
     
-    if (_progress &&
-        !_progress(self, _bytesReceived)) {
+    if (_progressBlock &&
+        !_progressBlock(self, _bytesReceived)) {
 
         [self close];
     }
