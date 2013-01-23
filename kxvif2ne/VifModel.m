@@ -513,7 +513,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     self = [super init];
     if (self) {
         
-        _lastEvent = 1021164;
+        _lastEvent = -1;
         _messageCache = [[VifMessageCache alloc] init];
     }
     return self;
@@ -657,7 +657,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     }
 }
 
-- (BOOL) parseLastEvent: (NSData *) data
+- (BOOL) parseLastEvent: (NSData *) data __attribute__((deprecated))
 {
     NSScanner *scanner = [NSScanner scannerWithString:[[NSString alloc] initWithData:data encoding:NSWindowsCP1251StringEncoding]];
     
@@ -841,8 +841,9 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                         
                         if (res.statusCode == 201 && !resetTree) {
                             
-                            // lastEvent is invalid, so must load full HTML page
-                            [self asyncLoadHTMLTree:block];
+                            DDLogInfo(@"lastEvent is invalid, reset tree");
+                            self.lastEvent = -1;
+                            [self asyncLoadXMLTree:block resetTree:YES];
                             
                         } else {
                             
@@ -887,7 +888,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                     }];
 }
 
-- (void) asyncLoadHTMLTree: (VifModelBlock) block
+- (void) asyncLoadHTMLTree: (VifModelBlock) block __attribute__((deprecated))
 {
     DDLogVerbose(@"asyncLoadHTMLTree");
     
