@@ -81,14 +81,49 @@
     [self postMessage: nil];
 }
 
+- (void) forceRefresh
+{
+    [self.refreshControl beginRefreshing];
+    
+    UIScrollView *scrollView = self.tableView;
+    //if ((scrollView.contentSize.height + 20) > scrollView.frame.size.height)
+    [scrollView setContentOffset:CGPointMake(0, -50) animated:YES];
+    
+    [self doRefresh:self.refreshControl];
+}
+
 - (void) postMessage: (VifArticle *) article;
 {
     VifSettings *settings = [VifSettings settings];
     if (settings.authorization) {
-        
-        if (!_postViewController)
+    
+        if (!_postViewController) {
             _postViewController = [[PostViewController alloc] init];
+            
+            __weak BaseVifViewController *weakSelf = self;
+            _postViewController.didSendBlock = ^(id result){
+                
+                if ([result isKindOfClass:[NSError class]]) {
+                    
+                    [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Unable send", nil)
+                                                message:((NSError *)result).localizedDescription
+                                               delegate:nil
+                                      cancelButtonTitle:NSLocalizedString(@"Close", nil)
+                                      otherButtonTitles:nil] show];
+                    
+                } else {
+                                        
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                         __strong BaseVifViewController *strongSelf = weakSelf;
+                        if (strongSelf) [strongSelf forceRefresh];
+                    });
+                }
+            };
+        }
+        
         _postViewController.article = article;
+        
         [self.navigationController pushViewController:_postViewController animated:YES];
         
     } else {
@@ -120,7 +155,7 @@
     }
 }
 
-- (void)doRefresh:(CKRefreshControl *)sender
+- (void)doRefresh:(id)sender
 {
 }
 

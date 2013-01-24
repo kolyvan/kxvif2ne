@@ -566,7 +566,7 @@ static int ddLogLevel = LOG_LEVEL_INFO;
     return level;
 }
 
-- (void)doRefresh:(CKRefreshControl *)sender
+- (void)doRefresh:(id)sender
 {
     [VifModel.model asyncUpdateNode:_rootNode
                               block: ^(id result) {

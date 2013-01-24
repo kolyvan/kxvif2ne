@@ -11,9 +11,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "VifModel.h"
 
-@class VifArticle;
+//@class VifArticle;
 
 @interface PostViewController : UIViewController<UITextViewDelegate>
 @property (readwrite, nonatomic, strong) VifArticle *article;
+@property (readwrite, nonatomic, strong) VifModelBlock didSendBlock;
+
 @end

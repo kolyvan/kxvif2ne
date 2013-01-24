@@ -12,7 +12,7 @@
 
 #import "PostViewController.h"
 #import "ColorTheme.h"
-#import "VifModel.h"
+//#import "VifModel.h"
 #import "VifMessageCache.h"
 #import "NSString+Kolyvan.h"
 #import "helpers.h"
@@ -206,8 +206,8 @@
        
         [[VifModel model] postMessage:_article.number
                               subject:subject
-                                 body:body];
-        
+                                 body:body
+                                block:_didSendBlock];
     }
     
     [self.navigationController popViewControllerAnimated:YES];

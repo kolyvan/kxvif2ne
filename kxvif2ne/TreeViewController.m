@@ -147,7 +147,7 @@ typedef struct
     _threadViewController = nil;
 }
 
-- (void)doRefresh:(CKRefreshControl *)sender
+- (void)doRefresh:(id)sender
 {
     [VifModel.model asyncUpdate:^(id result) {
  

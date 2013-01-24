@@ -27,6 +27,6 @@
 - (BOOL) openArticle: (NSUInteger) number;
 - (void) didTouchPostMessage;
 - (void) postMessage: (VifArticle *) article;
-- (void) doRefresh: (CKRefreshControl *)sender;
+- (void) doRefresh: (id)sender;
 
 @end

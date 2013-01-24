@@ -193,7 +193,7 @@ static NSString * htmlBodyFromParameters(NSDictionary *dict, CFStringEncoding en
         if (authorization)
             md[@"Authorization"] = authorization;
         
-        DDLogVerbose(@"get %@ auth: %@", _url, authorization);
+        DDLogVerbose(@"get %@", _url);
         
         NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:_url];
         [request setHTTPMethod:@"GET"];

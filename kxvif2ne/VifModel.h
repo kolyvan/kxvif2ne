@@ -19,6 +19,7 @@ typedef enum {
     VifModelErrorNone,
     VifModelErrorNetworkFailure,
     VifModelErrorHTTPFailure,
+    VifModelErrorHTTPNotFound,
     VifModelErrorWrongXMLResponse,
     VifModelErrorUnableParseArticle,
     VifModelErrorUnableParseLastEvent,
@@ -94,6 +95,7 @@ typedef void(^VifModelBlock)(id result);
 
 - (void) postMessage: (NSUInteger) articleNumber
              subject: (NSString *) subject
-                body: (NSString *) body;
+                body: (NSString *) body
+               block: (VifModelBlock) block;
 
 @end

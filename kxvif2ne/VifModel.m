@@ -32,6 +32,7 @@ static NSString * vifModelErrorStringForCode(VifModelError error)
     switch (error) {
         case VifModelErrorNetworkFailure: return NSLocalizedString(@"Network failure", nil);
         case VifModelErrorHTTPFailure: return NSLocalizedString(@"HTTP failure", nil);
+        case VifModelErrorHTTPNotFound: return NSLocalizedString(@"404 Not Found", nil);
         case VifModelErrorWrongXMLResponse: return NSLocalizedString(@"Wrong XML response", nil);
         case VifModelErrorUnableParseArticle: return NSLocalizedString(@"Unable parse article", nil);
         case VifModelErrorUnableParseLastEvent: return NSLocalizedString(@"Unable parse lastEvent", nil);
@@ -497,8 +498,12 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     }
 }
 
+
 - (BOOL) updateTreeFromEvents: (NSArray *) events
-{   
+                   parentNode: (VifNode *) parentNode
+{
+    //DDLogVerbose(@"updateTreeFromEvents: %@", events);
+    
     NSUInteger nadd = 0;
     
     for (NSDictionary *dict in events) {
@@ -507,7 +512,18 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
         if ([type isEqualToString:@"add"]) {
             
             VifArticle *article = [[VifArticle alloc] initFromDictionary:dict];
-            if (![self findNode:article.number recursive:YES]) {
+            
+            if (article.parent == parentNode.article.number) {
+            
+                if (![self findNode:article.number recursive:NO]) {
+                    
+                    VifNode *newNode = [[VifNode alloc] init:parentNode article:article];
+                    [self addNode:newNode];
+                    ++nadd;
+                    DDLogVerbose(@"add article %@", article);
+                }
+                
+            } else  if (![self findNode:article.number recursive:YES]) {
                 
                 if ([self addArticle:article]) {
                     
@@ -532,6 +548,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
     return YES;
 }
 
+ 
 @end
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1028,7 +1045,8 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
                                 
                                 BOOL result = NO;
                                 if (events.count)
-                                    result = [node.tree updateTreeFromEvents:events];
+                                    result = [node.tree updateTreeFromEvents:events
+                                                                  parentNode:node];
                                 if (result)
                                     ++_version;
                                 if (block)
@@ -1110,6 +1128,7 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
 - (void) postMessage: (NSUInteger) articleNumber
              subject: (NSString *) subject
                 body: (NSString *) body
+               block: (VifModelBlock) block
 {
     NSString *path;
     if (articleNumber)
@@ -1140,31 +1159,24 @@ NSError * vifModelError (VifModelError error, NSString *format, ...)
          
          [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
          
-         if (res.statusCode != 200) {
-             
-             NSString *s = [NSHTTPURLResponse localizedStringForStatusCode: res.statusCode];
-             s = [NSString stringWithFormat:@"%d %@", res.statusCode, s];
-             
-             [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"HTTP failure", nil)
-                                         message:s
-                                        delegate:nil
-                               cancelButtonTitle:NSLocalizedString(@"Close", nil)
-                               otherButtonTitles:nil] show];
-             
+         if (block) {
+         
+             if (res.statusCode == 200) {
+                 
+                 block(@(YES));
+                 
+             } else {
+                 
+                 NSString *s = [NSHTTPURLResponse localizedStringForStatusCode: res.statusCode];
+                 block(vifModelError(VifModelErrorHTTPFailure, @"%d %@", res.statusCode, s));
+             }
          }
          
          return NO;
      }
                  progress:nil
-                 complete:^(HTTPRequest *req, NSData *data, NSError *error)
-     {
-         if (error)
-             DDLogVerbose(@"%@", error);
-         if (data)
-             DDLogVerbose(@"%@", [[NSString alloc] initWithData:data encoding:req.response.stringEncoding]);
-         
-     }];
-
+                 complete:nil
+     ];
 }
 
 @end
